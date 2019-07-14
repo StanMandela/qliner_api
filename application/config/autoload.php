@@ -51,8 +51,9 @@ $autoload['packages'] = array();
 |
 | Prototype:
 |
-|	$autoload['libraries'] = array('database', 'email', 'session');
-|
+*/	$autoload['libraries'] = array('database', 'email', 'session');
+
+/*|
 | You can also supply an alternative library name to be assigned
 | in the controller:
 |
@@ -87,9 +88,10 @@ $autoload['drivers'] = array();
 | -------------------------------------------------------------------
 | Prototype:
 |
-|	$autoload['helper'] = array('url', 'file');
+|
 */
-$autoload['helper'] = array();
+$autoload['helper'] = array('url', 'file');
+//$autoload['helper'] = array();
 
 /*
 | -------------------------------------------------------------------

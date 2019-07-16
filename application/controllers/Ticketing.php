@@ -5,11 +5,14 @@
  * Date: 09/07/2019
  * Time: 15:06
  */
+include ("application/controllers/Notification.php");
 require APPPATH . '/libraries/REST_Controller.php';
+//require APPPATH . 'controllers/Notification.php';
 
 use Restserver\Libraries\REST_Controller;
 
-class ticketing extends REST_Controller
+
+class ticketing  extends REST_Controller
 {
     function __construct()
     {
@@ -60,7 +63,9 @@ class ticketing extends REST_Controller
 
                     //compose message
                 $message = "Your ticket number is " .$ticketNo. ". Number of people ahead in queue " .$aheadInQueue. ". Approximate waiting time will be " . $waitingTime . ". Possible service time will be approximately at ".$approxServiceTime;
-                echo $message;
+              // \controllers\notification::sendMessage($mobile,$message);
+              // \notification::sendMessage($mobile,$message);
+               \Notification::sendMessage($mobile,$message);
                 //send
 
                 $response = array(

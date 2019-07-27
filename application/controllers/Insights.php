@@ -17,6 +17,10 @@ class insights extends REST_Controller
         //false
             //return error
     }
+
+    /**
+     * controllled by date
+     */
     public function getInsights_get(){
         //call all calculation methods
 

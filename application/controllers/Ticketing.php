@@ -33,8 +33,6 @@ class ticketing extends REST_Controller
         $service_id = $decoded_post_data->service_id;
         $mobile = $decoded_post_data->mobile;
 
-       /* $service_id = $this->input->post['service_id'];
-        $mobile = $this->input->post['mobile'];*/
         //get current time
         date_default_timezone_set('Africa/Nairobi');
         $date = date('Y-m-d');

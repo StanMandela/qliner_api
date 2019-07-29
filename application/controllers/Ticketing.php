@@ -7,9 +7,10 @@
  */
 include("application/controllers/Notification.php");
 require APPPATH . '/libraries/REST_Controller.php';
+require 'vendor/oefenweb/statistics/src/Statistics.php';
 
-//require APPPATH . 'controllers/Notification.php';
 
+use Oefenweb\Statistics\Statistics;
 use Restserver\Libraries\REST_Controller;
 
 
@@ -72,7 +73,7 @@ class ticketing extends REST_Controller
         //send message
         //Calculate ....
         $ticketNo = $ticket_no;
-        $aheadInQueue = $this->getLengthOfQueue();
+        $aheadInQueue = $this->getLengthOfQueue($service_name);
         $waitingTime = $this->calculateAvgWaitingTime();
         $approxServiceTime = $this->approxServiceTime();
 
@@ -99,30 +100,43 @@ class ticketing extends REST_Controller
     }
 
     /**
-     * @param $queue
+     * @param $service_id
      * From Little's law, Length of queue = Mean Inter-arrival rate * Mean wait time
      * @return float|int
      */
-    public function getLengthOfQueue()
+    public function getLengthOfQueue($service_name)
     {
-        $length = 0 ;
-      //  $inter_arrival_time = getInterArrivalTime($queue);
-        $mean_wait_time = 0;
+       $mean_inter_arrival_time = $this->mean_interArrivalTime_single($service_name);  //done
+       $mean_wait_time = $this->meanWaitingTime($service_name); //
+       $length = $mean_inter_arrival_time * $mean_wait_time ;
+       return $length;
+    }
+    /**
+     * Calculates interarrival time for a single queue M/M/1
+     * @param $queue
+     * @param $date
+     * @return float
+     */
+    public  function mean_interArrivalTime_single($queue){
+        $date = date('Y-m-d');
+        $interarrivaltime = $this->ticketing_model->getInterArrivalTime($queue,$date);
 
-    //    $length = $inter_arrival_time * $mean_wait_time ;
+       // print_r($interarrivaltimes);
 
-
-        return 40;
+        return  $interarrivaltime;
     }
 
     /**
-     * @param $queue
+     * Calculate interarrival time for the whole system M/M/c
+     * @param $date
      * @return float
      */
-    public  function getInterArrivalTime($queue){
+    public  function interArrivalTime_System($date){
         //for one service M/M/1
 
+
         //for multiple service M/M/C
+
 
         return  8.0;
     }

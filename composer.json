@@ -12,7 +12,8 @@
 	},
 	"require": {
 		"php": ">=5.3.7",
-		"africastalking/africastalking": "^2.2"
+		"africastalking/africastalking": "^2.2",
+		"oefenweb/statistics": "^2.0"
 	},
 	"suggest": {
 		"paragonie/random_compat": "Provides better randomness in PHP 5.x"

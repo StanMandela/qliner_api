@@ -29,7 +29,7 @@ class ticketing extends REST_Controller
     public function addCustomer_post()
     {
         //get params ( service time and mobile
-        $post_data =  file_get_contents("php://input");
+        $post_data = file_get_contents("php://input");
         $decoded_post_data = json_decode($post_data);
         $service_id = $decoded_post_data->service_id;
         $mobile = $decoded_post_data->mobile;
@@ -41,11 +41,11 @@ class ticketing extends REST_Controller
 
         //get service name
         $service_abbr = $this->ticketing_model->get_service_abbr($service_id)->abbrev;
-        $service_name =$this->ticketing_model->get_service_abbr($service_id)->service_Name;
+        $service_name = $this->ticketing_model->get_service_abbr($service_id)->service_Name;
 
         //set priority levels
         $priority_level = 2;
-        if ($service_id== 5){
+        if ($service_id == 5) {
             $priority_level = 1;
         }
 
@@ -66,29 +66,29 @@ class ticketing extends REST_Controller
         );
 
         try {
-        //send values to model
-        $status = $this->ticketing_model->insert_new_customer($data);
-       // echo $status;
+            //send values to model
+            $status = $this->ticketing_model->insert_new_customer($data);
+            // echo $status;
 
-        //send message
-        //Calculate ....
-        $ticketNo = $ticket_no;
-        $aheadInQueue = $this->getLengthOfQueue($service_name);
-        $waitingTime = $this->calculateAvgWaitingTime();
-        $approxServiceTime = $this->approxServiceTime();
+            //send message
+            //Calculate ....
+            $ticketNo = $ticket_no;
+            $aheadInQueue = $this->getLengthOfQueue($service_name);
+            $waitingTime = $this->calculateAvgWaitingTime();
+            $approxServiceTime = $this->approxServiceTime();
 
-        //compose message
-        $message = "Your ticket number is " . $ticketNo . ". Number of people ahead in queue " . $aheadInQueue . ". Approximate waiting time will be " . $waitingTime . ". Possible service time will be approximately at " . $approxServiceTime;
-        //send
+            //compose message
+            $message = "Your ticket number is " . $ticketNo . ". Number of people ahead in queue " . $aheadInQueue . ". Approximate waiting time will be " . $waitingTime . ". Possible service time will be approximately at " . $approxServiceTime;
+            //send
 
-       // \Notification::sendMessage($mobile, $message);
+            // \Notification::sendMessage($mobile, $message);
 
-        $response = array(
+            $response = array(
 
-            "status" => true,
-            "result" => 'Customer added successfully, Message sent successfully'
-        );
-        }catch (Exception $e){
+                "status" => true,
+                "result" => 'Customer added successfully, Message sent successfully'
+            );
+        } catch (Exception $e) {
             $response = array(
 
                 "status" => false,
@@ -100,30 +100,34 @@ class ticketing extends REST_Controller
     }
 
     /**
-     * @param $service_id
-     * From Little's law, Length of queue = Mean Inter-arrival rate * Mean wait time
+     * @param service_name
+     * For M/M/1, Length of queue = p^2 / (1-p) where p = utilization of server
      * @return float|int
      */
     public function getLengthOfQueue($service_name)
     {
-       $mean_inter_arrival_time = $this->mean_interArrivalTime_single($service_name);  //done
-       $mean_wait_time = $this->meanWaitingTime($service_name); //
-       $length = $mean_inter_arrival_time * $mean_wait_time ;
-       return $length;
+        $mean_inter_arrival_time = $this->mean_interArrivalTime_single($service_name);  //done
+        $arrival_rate = 1 / $mean_inter_arrival_time; //lambda
+        $mean_service_time = 0; //TODO : calculate service time
+        $service_rate = 1 / $mean_service_time;
+        $p = $arrival_rate / $service_rate;
+        $length = ($p * $p) / (1 - $p);
+        return $length;
     }
+
     /**
      * Calculates interarrival time for a single queue M/M/1
      * @param $queue
-     * @param $date
      * @return float
      */
-    public  function mean_interArrivalTime_single($queue){
+    public function mean_interArrivalTime_single($queue)
+    {
         $date = date('Y-m-d');
-        $interarrivaltime = $this->ticketing_model->getInterArrivalTime($queue,$date);
-
-       // print_r($interarrivaltimes);
-
-        return  $interarrivaltime;
+        $interarrivaltime = $this->ticketing_model->getInterArrivalTime($queue, $date);
+        $values = array();
+        $sum = Statistics::mean($interarrivaltime);
+        print_r($sum);
+        return $interarrivaltime;
     }
 
     /**
@@ -131,19 +135,20 @@ class ticketing extends REST_Controller
      * @param $date
      * @return float
      */
-    public  function interArrivalTime_System($date){
+    public function interArrivalTime_System($date)
+    {
         //for one service M/M/1
 
 
         //for multiple service M/M/C
 
 
-        return  8.0;
+        return 8.0;
     }
 
     public function calculateAvgWaitingTime()
     {
-      //  $waiting_time_all_customers = $this->ticketing_model->getWaitingTimes();
+        //  $waiting_time_all_customers = $this->ticketing_model->getWaitingTimes();
         return 40;
     }
 

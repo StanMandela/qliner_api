@@ -22,7 +22,5 @@ public static function sendMessage($receipient,$message){
     $gateway = new AfricasTalkingGateway($username, $apikey, "sandbox");
     $result =$gateway->sendMessage($receipient, $message);
 
-
-    print_r($result);
 }
 }

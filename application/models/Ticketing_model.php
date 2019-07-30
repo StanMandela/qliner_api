@@ -153,10 +153,10 @@ class Ticketing_model extends CI_Model
     }
    public function service_time($queue){
          $this->db->select('TIMEDIFF(service_completion_time,service_start_time) as service_time');
-        // $date=date('Y-m-d');
+         $date=date('Y-m-d');
          $this->db->from ($queue);
          $this->db-> JOIN ('customers',$queue.'.ticket_no= customers.ticket_no');
-         $this->db->where ('customers.date','2019-07-23');
+         $this->db->where ('customers.date',$date);
          //$this->db->where($queue.'.index_ID',);
         $service_times = $this->db->get()->result();
         //$service_time=$query->service_time;

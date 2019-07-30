@@ -151,12 +151,31 @@ class Ticketing_model extends CI_Model
       return $mean_time;
 
     }
+   public function service_time($queue){
+         $this->db->select('TIMEDIFF(service_completion_time,service_start_time) as service_time');
+        // $date=date('Y-m-d');
+         $this->db->from ($queue);
+         $this->db-> JOIN ('customers',$queue.'.ticket_no= customers.ticket_no');
+         $this->db->where ('customers.date','2019-07-23');
+         //$this->db->where($queue.'.index_ID',);
+        $service_times = $this->db->get()->result();
+        //$service_time=$query->service_time;
+      //  print_r($service_times);
+        return $service_times;
+    
+        
+    }
 
     public function getWaitingTimes()
     {
-        $this->db->select('arrival_time , start_time');
-        $this->db->from('customers');
-        $this->db->where();
+        $this->db->select('TIMEDIFF (service_start_time,arrival_time) as waiting_time');
+        $this->db->from($queue);
+        $this->db-> JOIN ('customers',$queue.'.ticket_no= customers.ticket_no');
+        $this->db->where ('customers.date',2019-07-23);
+        $this->db->order_by($queue.'.index_ID= 29', 'ASC');
+       $query = $this->db->get()->row();
+       $waiting_time=$query->service_time;
+       print_r ($waiting_time);
 
 
     }

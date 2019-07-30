@@ -108,10 +108,22 @@ class ticketing extends REST_Controller
     {
         $mean_inter_arrival_time = $this->mean_interArrivalTime_single($service_name);  //done
         $arrival_rate = 1 / $mean_inter_arrival_time; //lambda
-        $mean_service_time = 0; //TODO : calculate service time
+        $service_times = $this->ticketing_model->service_time($service_name); //TODO : calculate service time
+       // print_r($service_times);
+       $count = 0;
+       $mean_time = array();
+        foreach($service_times as $service){
+          //  print_r($service->service_time);
+            sscanf($service->service_time, "%d:%d:%d", $hours, $minutes, $seconds);
+            $time_seconds[$count] = $hours * 3600 + $minutes * 60 + $seconds;    
+        }
+       
+        $mean_service_time=Statistics::mean($time_seconds); // in seconds
+        $mean_service_time = $mean_service_time / 60 ; // in minutes
+       
         $service_rate = 1 / $mean_service_time;
-        $p = $arrival_rate / $service_rate;
-        $length = ($p * $p) / (1 - $p);
+        $p = $arrival_rate / $service_rate; //utilization of server
+        $length = ($p * $p) / (1 - $p); //length of queue
         return $length;
     }
 
@@ -124,9 +136,9 @@ class ticketing extends REST_Controller
     {
         $date = date('Y-m-d');
         $interarrivaltime = $this->ticketing_model->getInterArrivalTime($queue, $date);
-        $values = array();
-        $sum = Statistics::mean($interarrivaltime);
-        print_r($sum);
+        // $values = array();
+        // $sum = Statistics::mean($interarrivaltime);
+        // print_r($sum);
         return $interarrivaltime;
     }
 
@@ -148,8 +160,8 @@ class ticketing extends REST_Controller
 
     public function calculateAvgWaitingTime()
     {
-        //  $waiting_time_all_customers = $this->ticketing_model->getWaitingTimes();
-        return 40;
+       // $waiting_time_all_customers = $this->ticketing_model->getWaitingTimes();
+        return $waiting_time_all_customers;
     }
 
 

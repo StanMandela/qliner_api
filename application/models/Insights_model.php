@@ -27,7 +27,8 @@ class Insights_model extends CI_Model
           
              return $cust;
     }
-    public function systemArrivalTimes(){
+    public function systemArrivalTimes()//done
+    {
         $customers = $this->getCustomersIds();
         $first_person = array_shift($customers);
         $last_person = array_pop($customers);
@@ -88,18 +89,16 @@ class Insights_model extends CI_Model
       return $mean_time;
 
     }
-    public function service_time($queue){
-        
-        $this->db->select('TIMEDIFF(service_completion_time,service_start_time) as service_time');
+    public function service_time(){
         $date=date('Y-m-d');
-        $this->db->from ($queue);
-        $this->db-> JOIN ('customers',$queue.'.ticket_no= customers.ticket_no');
+        $this->db->select('TIMEDIFF(service_completion_time,service_start_time) as service_time');
+        $this->db->from ('customers');
         $this->db->where ('customers.date',$date);
         //$this->db->where($queue.'.index_ID',);
        $service_times = $this->db->get()->result();
        //$service_time=$query->service_time;
-     //  print_r($service_times);
        return $service_times;
+
    
        
    }

@@ -37,11 +37,16 @@ class Insights extends REST_Controller
     /**
      * controllled by date
      */
-    public function getInsights_get()
+    public function getInsights_post()
     {
-       // $period = $this->input->post('peroid');
-        $start_date = $this->input->get('start_date');
-        $end_date = $this->input->get('end_date');
+
+        $post_data = file_get_contents("php://input");
+        $decoded_post_data = json_decode($post_data);
+
+        // $period = $this->input->post('peroid');
+        $start_date = $decoded_post_data->start_date;
+        $end_date = $decoded_post_data->end_date;
+
 
         //call all calculation methods
         $server_utilization = $this->calculateServerUtilization($start_date,$end_date);
@@ -125,14 +130,18 @@ class Insights extends REST_Controller
             }
             if($mean_service_times[$start_date] == 0){
                 $server_utilization=0;
-                $server_utilizations[$start_date] = $server_utilization;
+                $server_utilizations[$j]['utilizations'] = $server_utilization;
+                $server_utilizations[$j]['date']= $start_date;
+
             }else {
                 $service_rate = 1 / $mean_service_times[$start_date];//miu
 
                 $server_utilization = round(($arrivalRate / $service_rate)*100,2); //formula
-                $server_utilizations[$start_date] = $server_utilization;
-                $j++;
+                $server_utilizations[$j]['utilizations'] = $server_utilization;
+                $server_utilizations[$j]['date']= $start_date;
             }
+            $j++;
+
             //increment date
 
             $instance_date = date('Y-m-d', strtotime("+1 day", strtotime($start_date)));

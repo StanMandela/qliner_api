@@ -130,6 +130,40 @@ class Insights_model extends CI_Model
         return $mean_time;
 
     }
+    public function  queues(){
+        $this->db->select('service_Name');
+        $this->db->from('service_types');
+        $queues = $this->db->get()->result();
+        return $queues;
+    }
+    public function queueLengths($start,$end,$queue)
+    {
+        $start_date = new DateTime($start);
+        $end_date = new DateTime($end);
+        $no_of_days = $end_date->diff($start_date);
+        $day_diff = $no_of_days->format('%d');
+        $date = $start;
+        $qlengths = array();
+        for ($i = 0; $i <= $day_diff; $i++) {
+
+            $this->db->select($queue.'.ticket_no');
+            $this->db->from($queue);
+            $this->db->join('customers', 'customers.ticket_no =' . $queue . '.ticket_no');
+            $this->db->where('customers.date', $date);
+            $qlength = $this->db->get()->num_rows();
+            $qlengths[$date] = $qlength;
+
+
+            //increment date
+            $instance_date = date('Y-m-d', strtotime("+1 day", strtotime($date)));
+            //print_r($instance_date);
+            // echo '</br>';
+            $date = $instance_date;
+
+
+        }
+        return $qlengths;
+    }
 
     public function service_time($date)
     {

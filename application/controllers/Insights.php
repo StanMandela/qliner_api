@@ -15,6 +15,9 @@ use Restserver\Libraries\REST_Controller;
 
 class Insights extends REST_Controller
 {
+
+    private $customers = array();
+    private $mean_service_times = array();
     function __construct()
     {
         parent::__construct();
@@ -46,6 +49,9 @@ class Insights extends REST_Controller
         $response = array(
             'status' => 'true',
             'server_utilization' => $server_utilization,
+            'customers' => $this->customers,
+            'service_times' =>$this->mean_service_times,
+            'queue_lengths' =>$this->queueLengthSingle($start_date,$end_date)
 
         );
 
@@ -61,10 +67,11 @@ class Insights extends REST_Controller
         //algorithms
     }
 
-    /**
-     * @param $end
-     * @param $start
-     * @return
+    /**sever utilization = (arrival rate / service rate )* 100
+     * service rates and number of customers are found here
+     * @param $end_date
+     * @param $start_date
+     * @return array
      */
     public function calculateServerUtilization($start_date,$end_date)
     {
@@ -74,7 +81,20 @@ class Insights extends REST_Controller
         $server_utilizations = array();
         $diffs_customers = $interarrival_details['diffs_customers'];
         $customers = $interarrival_details['total_customers'];
+
+        $cust_date = $start_date;
+        $custs = array();
+        foreach ($customers as $customer){
+            $custs[$cust_date]= $customer;
+
+                 //increment date
+
+            $instance_date = date('Y-m-d', strtotime("+1 day", strtotime($cust_date)));
+            $cust_date = $instance_date;
+        }
+        $this->customers = $custs;
         $j =0;
+        $mean_service_time = array();
         foreach ($diffs_customers as $diffs_customer) {
             sscanf($diffs_customer['timedifference'], "%d:%d:%d", $hours, $minutes, $seconds);
 
@@ -87,37 +107,30 @@ class Insights extends REST_Controller
                 $meaninterarrival = $time_seconds / ($diffs_customer['customer'] * 60); //in minutes
                 $arrivalRate = 1 / $meaninterarrival; //lambda
             }
-
+            //get service time of a particular date of all servers
             $service_times = $this->insights_model->service_time($start_date);
-
             $count = 0;
             $time = array();
+
             foreach ($service_times as $service) {
                 sscanf($service->service_time, "%d:%d:%d", $hours, $minutes, $seconds);
                 $time[$count] = $hours * 3600 + $minutes * 60 + $seconds;
                 $count++;
             }
-
-
             if (count($time) != 0) {
                 $mean_service_time = Statistics::mean($time); // in seconds
-
+                $mean_service_times[$start_date] = round(($mean_service_time / 60),2); // in minutes
             }else{
-                $mean_service_time =0;
+                $mean_service_times[$start_date] =0;
             }
-            if ($mean_service_time == 0) {
-                echo " zero";
-                // throw new Exception();
-            }
-            $mean_service_time = $mean_service_time / 60; // in minutes
-            if($mean_service_time == 0){
-                $service_rate = 0;
+            if($mean_service_times[$start_date] == 0){
                 $server_utilization=0;
+                $server_utilizations[$start_date] = $server_utilization;
             }else {
-                $service_rate = 1 / $mean_service_time;//miu
+                $service_rate = 1 / $mean_service_times[$start_date];//miu
 
-                $server_utilization = $arrivalRate / $service_rate;
-                $server_utilizations[$j] = $server_utilization;
+                $server_utilization = round(($arrivalRate / $service_rate)*100,2); //formula
+                $server_utilizations[$start_date] = $server_utilization;
                 $j++;
             }
             //increment date
@@ -126,20 +139,34 @@ class Insights extends REST_Controller
             $start_date = $instance_date;
 
         }
+        $this->mean_service_times = $mean_service_times; //minutes
         return $server_utilizations;
     }
 
-    public function calculateServerRate()
+
+
+    /** Litles law = Mean rate of arrival * average waiting time
+     * @param $start_date
+     * @param $end_date
+     */
+    public function queueLengthSystem($start_date, $end_date)
     {
         //algorithms
-
 
     }
 
-    public function queueLength()
+    /**
+     * @param $start_date
+     * @param $end_date
+     * @return mixed
+     */
+    public function queueLengthSingle($start_date, $end_date)
     {
-        //algorithms
-
+        $queues = $this->insights_model->queues();
+        foreach ($queues as $queue) {
+           $q_length[$queue->service_Name] = $this->insights_model->queuelengths($start_date,$end_date,$queue->service_Name);
+        }
+        return$q_length;
     }
 
     public function arrivalRates()
@@ -148,7 +175,7 @@ class Insights extends REST_Controller
 
     }
 
-    public function avgWaitingTime()
+    public function avgWaitingTime($start_date,$end_date)
     {
         //algorithms
 

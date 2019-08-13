@@ -141,7 +141,7 @@ class Insights_model extends CI_Model
         $start_date = new DateTime($start);
         $end_date = new DateTime($end);
         $no_of_days = $end_date->diff($start_date);
-        $day_diff = $no_of_days->format('%d');
+            $day_diff = $no_of_days->format('%d');
         $date = $start;
         $qlengths = array();
         for ($i = 0; $i <= $day_diff; $i++) {

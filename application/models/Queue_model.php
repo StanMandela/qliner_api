@@ -24,6 +24,8 @@ class Queue_model extends CI_Model
         $this->db->join('customers', 'customers.ticket_no = '.$queue.'.ticket_no');
         $this->db->where('customers.date',$date);
         $this->db->where("customers.status_id = 2 OR customers.status_id = 3");
+        $this->db->order_by('customers.priority_level','ASC','customers.arrival_time','DESC');
+        $this->db->order_by('customers.arrival_time','ASC');
 
         $this->db->limit(2);
 
@@ -37,6 +39,8 @@ class Queue_model extends CI_Model
         $this->db->join('customers', 'customers.ticket_no = '.$queue.'.ticket_no');
         $this->db->where('customers.date',$date);
         $this->db->where("customers.status_id = 2 OR customers.status_id = 3");
+        $this->db->order_by('customers.priority_level','ASC','customers.arrival_time','DESC');
+        $this->db->order_by('customers.arrival_time','ASC');
         $this->db->limit(5);
 
         $customers = $this->db->get()->result();

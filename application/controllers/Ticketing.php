@@ -37,6 +37,7 @@ class ticketing extends REST_Controller
         $decoded_post_data = json_decode($post_data);
         $service_id = $decoded_post_data->service_id;
         $mobile = $decoded_post_data->mobile;
+        $emergency_code = $decoded_post_data->emergency_code;
 
         //get current time
         date_default_timezone_set('Africa/Nairobi');
@@ -49,7 +50,7 @@ class ticketing extends REST_Controller
 
         //set priority levels
         $priority_level = 2;
-        if ($service_id == 5) {
+        if ($emergency_code == 1234) {
             $priority_level = 1;
         }
 
@@ -78,6 +79,9 @@ class ticketing extends REST_Controller
             $aheadInQueue = $this->getLengthOfQueue($service_name);
             if (is_string($aheadInQueue)) {
                 $message = "Your ticket number is " . $ticketNo . " .Service has not started hence not possible to calculate your approx waiting time";
+            }elseif ($emergency_code == 1234){
+                $message = "Your ticket number is " . $ticketNo . " Emergency case. Will be served next";
+
             } else {
                 $waitingTime = $this->calculateExpectedWaitingTime($aheadInQueue, $this->arrival_rate);
                 $approxServiceTime = $this->approxServiceTime($waitingTime);
@@ -123,26 +127,34 @@ class ticketing extends REST_Controller
         $this->arrival_rate = $arrival_rate;
         $service_times = $this->ticketing_model->service_time($service_name); //TODO : calculate service time
         $count = 0;
+        $time_seconds = array();
         try {
-            foreach ($service_times as $service) {
-                sscanf($service->service_time, "%d:%d:%d", $hours, $minutes, $seconds);
-                $time_seconds[$count] = $hours * 3600 + $minutes * 60 + $seconds;
-                $count++;
+            if(empty($service_times)){
+                $service_rate =0;//miu
+                $this->service_rate = $service_rate;
+                return $length;
+
+
+            }else {
+                foreach ($service_times as $service) {
+                    sscanf($service->service_time, "%d:%d:%d", $hours, $minutes, $seconds);
+                    $time_seconds[$count] = $hours * 3600 + $minutes * 60 + $seconds;
+                    $count++;
+                }
+                $mean_service_time = Statistics::mean($time_seconds); // in seconds
+                if ($mean_service_time == 0) {
+                    throw new Exception();
+                }
+                $mean_service_time = $mean_service_time / 60; // in minutes
+
+                $service_rate = 1 / $mean_service_time;//miu
+                $this->service_rate = $service_rate;
+                $p = $arrival_rate / $service_rate; //utilization of server
+                /*  $length = ($p * $p) / (1 - $p); //length of queue*/
+
+
+                return $length;
             }
-            $mean_service_time = Statistics::mean($time_seconds); // in seconds
-            if ($mean_service_time == 0) {
-                throw new Exception();
-            }
-            $mean_service_time = $mean_service_time / 60; // in minutes
-
-            $service_rate = 1 / $mean_service_time;//miu
-            $this->service_rate = $service_rate;
-            $p = $arrival_rate / $service_rate; //utilization of server
-          /*  $length = ($p * $p) / (1 - $p); //length of queue*/
-
-
-            return $length;
-
         } catch (Exception $e) {
             return "Service has not yet started";
         }

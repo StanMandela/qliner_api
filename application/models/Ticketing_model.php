@@ -151,16 +151,27 @@ class Ticketing_model extends CI_Model
       return $mean_time;
 
     }
+    public function getLengthOfQueue($service_name){
+        $date = date("Y-m-d");
+        $this->db->select($service_name.'.index_ID');
+        $this->db->from ($service_name);
+        $this->db-> JOIN ('customers',$service_name.'.ticket_no= customers.ticket_no');
+        $this->db->where ('customers.date',$date);
+        $this->db->where('customers.status_id',2); //only where customers have been served
+        $length = $this->db->get()->num_rows();
+        return $length;
+    }
    public function service_time($queue){
-         $this->db->select('TIMEDIFF(service_completion_time,service_start_time) as service_time');
-         $date=date('Y-m-d');
+       $date=date('Y-m-d');
+
+       $this->db->select('TIMEDIFF(service_completion_time,service_start_time) as service_time');
          $this->db->from ($queue);
          $this->db-> JOIN ('customers',$queue.'.ticket_no= customers.ticket_no');
          $this->db->where ('customers.date',$date);
+         $this->db->where('customers.status_id',1); //only where customers have been served
          //$this->db->where($queue.'.index_ID',);
         $service_times = $this->db->get()->result();
         //$service_time=$query->service_time;
-      //  print_r($service_times);
         return $service_times;
     
         

@@ -17,7 +17,9 @@ use Restserver\Libraries\REST_Controller;
 class ticketing extends REST_Controller
 {
 
-    private $service_rate =0 ;
+    private $service_rate = 0;
+    private $arrival_rate = 0;
+
     function __construct()
     {
         parent::__construct();
@@ -67,38 +69,38 @@ class ticketing extends REST_Controller
             'priority_level' => $priority_level
         );
 
-        try {
+    //    try {
             //send values to model
             $status = $this->ticketing_model->insert_new_customer($data);
 
             //Calculate length of queue , waiting time , approx_service time
             $ticketNo = $ticket_no;
             $aheadInQueue = $this->getLengthOfQueue($service_name);
-            if (is_string($aheadInQueue)){
-                $message =  $aheadInQueue;
-            }else{
-            $waitingTime = $this->calculateExpectedWaitingTime($aheadInQueue,$this->service_rate);
-            $approxServiceTime = $this->approxServiceTime($waitingTime);
+            if (is_string($aheadInQueue)) {
+                $message = "Your ticket number is " . $ticketNo . " .Service has not started hence not possible to calculate your approx waiting time";
+            } else {
+                $waitingTime = $this->calculateExpectedWaitingTime($aheadInQueue, $this->arrival_rate);
+                $approxServiceTime = $this->approxServiceTime($waitingTime);
 
-            //compose message
-            $message = "Your ticket number is " . $ticketNo . ". Number of people ahead in queue " . $aheadInQueue . ". Approximate waiting time will be " . $waitingTime . ". Possible service time will be approximately at " . $approxServiceTime;
-            //send
+                //compose message
+                $message = "Your ticket number is " . $ticketNo . ". Number of people ahead in queue " . $aheadInQueue . ". Approximate waiting time will be " . floor($waitingTime) . " mins. Possible service time will be approximately at " . $approxServiceTime;
+                //send
 
-            // \Notification::sendMessage($mobile, $message);
+                // \Notification::sendMessage($mobile, $message);
             }
             $response = array(
 
                 "status" => true,
-                "result" => 'Customer added successfully, Message sent successfully'
-               // "result" =>$message
+                // "result" => 'Customer added successfully, Message sent successfully'
+                "result" => $message
             );
-        } catch (Exception $e) {
+      /*  } catch (Exception $e) {
             $response = array(
 
                 "status" => false,
                 "result" => $e
             );
-        }
+        }*/
 
         $this->response($response, REST_Controller::HTTP_OK);
     }
@@ -111,34 +113,39 @@ class ticketing extends REST_Controller
      */
     public function getLengthOfQueue($service_name)
     {
+
+        $length = $this->ticketing_model->getLengthOfQueue($service_name);
+
+
+
         $mean_inter_arrival_time = $this->mean_interArrivalTime_single($service_name);  //done
         $arrival_rate = 1 / $mean_inter_arrival_time; //lambda
+        $this->arrival_rate = $arrival_rate;
         $service_times = $this->ticketing_model->service_time($service_name); //TODO : calculate service time
-       // print_r($service_times);
-       $count = 0;
-       try{
-        foreach($service_times as $service){
-          //  print_r($service->service_time);
-            sscanf($service->service_time, "%d:%d:%d", $hours, $minutes, $seconds);
-            $time_seconds[$count] = $hours * 3600 + $minutes * 60 + $seconds;   
-            $count++; 
-        }
-        $mean_service_time=Statistics::mean($time_seconds); // in seconds
-        if ($mean_service_time == 0){
-            throw new Exception();
-        }
-        $mean_service_time = $mean_service_time / 60 ; // in minutes
-       
-        $service_rate = 1 / $mean_service_time;//miu
-        $this->service_rate = $service_rate;
-        $p = $arrival_rate / $service_rate; //utilization of server
-        $length = ($p * $p) / (1 - $p); //length of queue
+        $count = 0;
+        try {
+            foreach ($service_times as $service) {
+                sscanf($service->service_time, "%d:%d:%d", $hours, $minutes, $seconds);
+                $time_seconds[$count] = $hours * 3600 + $minutes * 60 + $seconds;
+                $count++;
+            }
+            $mean_service_time = Statistics::mean($time_seconds); // in seconds
+            if ($mean_service_time == 0) {
+                throw new Exception();
+            }
+            $mean_service_time = $mean_service_time / 60; // in minutes
 
-      
-    return $length;
-    }catch (Exception $e){
-        return "Service has not yet started";
-    }
+            $service_rate = 1 / $mean_service_time;//miu
+            $this->service_rate = $service_rate;
+            $p = $arrival_rate / $service_rate; //utilization of server
+          /*  $length = ($p * $p) / (1 - $p); //length of queue*/
+
+
+            return $length;
+
+        } catch (Exception $e) {
+            return "Service has not yet started";
+        }
     }
 
     /**
@@ -159,14 +166,14 @@ class ticketing extends REST_Controller
 
     /**
      * Calculates expected waiting time of a particular customer
-     * Wq = Lq / lambda.  That is Waiting time = Length of queue / mean service rate
+     * Wq = Lq / lambda.  That is Waiting time = Length of queue / mean arrival rate
      * @param $length
-     * @param $service_rate
+     * @param $arrival_rate
      * @return float
      */
-    public function calculateExpectedWaitingTime($length,$service_rate)
+    public function calculateExpectedWaitingTime($length, $arrival_rate)
     {
-        $expected_waiting_time = $length / $service_rate;
+        $expected_waiting_time = $length / $arrival_rate;
         return $expected_waiting_time;
     }
 
@@ -174,13 +181,19 @@ class ticketing extends REST_Controller
     /**
      * @param $waiting_time
      * @return false|string
+     * @throws
      */
     public function approxServiceTime($waiting_time)
     {
+       // $waiting_time = 30;
         $time = date('h:i:s');
-        $approx_service_time = date('h:i:s', strtotime($time) +strtotime($waiting_time));
+        $time = new DateTime($time);
+        $time->add(new DateInterval('PT' . floor($waiting_time) . 'M'));
+
+        $approx_service_time = $time->format('H:i:s');
         return $approx_service_time;
     }
+
     /**
      * Calculate interarrival time for the whole system M/M/c
      * @param $date
@@ -199,7 +212,7 @@ class ticketing extends REST_Controller
 
     public function calculateAvgWaitingTime()
     {
-       // $waiting_time_all_customers = $this->ticketing_model->getWaitingTimes();
+        // $waiting_time_all_customers = $this->ticketing_model->getWaitingTimes();
         return $waiting_time_all_customers;
     }
 

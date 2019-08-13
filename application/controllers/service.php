@@ -49,7 +49,7 @@ class service extends REST_Controller
             //compose message
             $message = "Ticket no " . $first_customer->ticket_no . " Your service is starting now at " . $service_name;
             //send notification of service
-            // \notification::sendMessage($mobile,$message);
+             \notification::sendMessage($mobile,$message);
 
             $response = array(
 
@@ -96,7 +96,7 @@ class service extends REST_Controller
             //compose message
             $message = "Ticket no " . $next . " Your service is starting now at " . $service_name;
             //send notification of service
-            // \notification::sendMessage($mobile,$message);
+             \notification::sendMessage($mobile,$message);
             //mark service status of previous customer to completed
             $this->service_model->changeCustomerStatus($next, 3);
 

@@ -106,6 +106,7 @@ class ticketing extends REST_Controller
     /**
      * @param service_name
      * For M/M/1, Length of queue = p^2 / (1-p) where p = utilization of server
+     * For M/M/c , Length of queue =
      * @return float|int|string
      */
     public function getLengthOfQueue($service_name)

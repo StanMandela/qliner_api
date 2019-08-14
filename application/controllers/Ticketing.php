@@ -90,13 +90,13 @@ class ticketing extends REST_Controller
                 $message = "Your ticket number is " . $ticketNo . ". Number of people ahead in queue " . $aheadInQueue . ". Approximate waiting time will be " . floor($waitingTime) . " mins. Possible service time will be approximately at " . $approxServiceTime;
                 //send
 
-                // \Notification::sendMessage($mobile, $message);
+                 \Notification::sendMessage($mobile, $message);
             }
             $response = array(
 
                 "status" => true,
-                // "result" => 'Customer added successfully, Message sent successfully'
-                "result" => $message
+                 "result" => 'Customer added successfully, Message sent successfully'
+                //"result" => $message
             );
       /*  } catch (Exception $e) {
             $response = array(

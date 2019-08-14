@@ -21,7 +21,7 @@ class AfricasTalkingGatewayException extends Exception  {}
 class AfricasTalkingGateway
 {
   protected $_username;
-  protected $_apiKey ='85d73a8733f098182f7caf3037e880160e9219dcf87ea1c9bdfb4e73f9bc414d';
+  protected $_apiKey ='fe8e4b74c5a12e7b91022c020ae39def00a5e618a2f2c3348c50354e43eac553';
   
   protected $_requestBody;
   protected $_requestUrl;

@@ -27,11 +27,14 @@ class Insights extends REST_Controller
 
     public function authentication_post()
     {
-        //true
-        //get insights
-
-        //false
-        //return error
+        //true   //return error //get insights//false
+        $post_data = file_get_contents("php://input");
+        $decoded_post_data = json_decode($post_data);
+        
+        $email = $decoded_post_data->email;
+        $password = $decoded_post_data->password;
+        
+      
     }
 
     /**
@@ -89,13 +92,15 @@ class Insights extends REST_Controller
 
         $cust_date = $start_date;
         $custs = array();
+        $i =0;
         foreach ($customers as $customer){
-            $custs[$cust_date]= $customer;
-
+            $custs[$i]['queue_length']= $customer;
+            $custs[$i]['date']= $start_date;
                  //increment date
-
             $instance_date = date('Y-m-d', strtotime("+1 day", strtotime($cust_date)));
             $cust_date = $instance_date;
+            //increment counter
+            $i++;
         }
         $this->customers = $custs;
         $j =0;
@@ -170,10 +175,14 @@ class Insights extends REST_Controller
      * @return mixed
      */
     public function queueLengthSingle($start_date, $end_date)
-    {
+    {     $q_lengths= array();
+        $i =0;
         $queues = $this->insights_model->queues();
+      
         foreach ($queues as $queue) {
            $q_length[$queue->service_Name] = $this->insights_model->queuelengths($start_date,$end_date,$queue->service_Name);
+
+         
         }
         return$q_length;
     }

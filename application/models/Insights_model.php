@@ -1,5 +1,9 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
+// require 'vendor/oefenweb/statistics/src/Statistics.php';
+
+
+use Oefenweb\Statistics\Statistics;
 
 class Insights_model extends CI_Model
 {
@@ -136,6 +140,54 @@ class Insights_model extends CI_Model
         $queues = $this->db->get()->result();
         return $queues;
     }
+    public function today_queue($date){
+
+        $this->db->select('*');
+        $this->db->from('customers');
+        $this->db->where('customers.date', $date);
+        $today_queue=$this->db->get()->num_rows();
+        return $today_queue;
+
+    }
+    public function waiting_time($date){
+         
+        //1. getting the service start time of the last person
+        $this->db->select('TIMEDIFF (service_start_time,arrival_time) as waiting_time');
+        $this->db->from('customers');
+        $this->db->where('customers.date', $date);
+        $this->db->where('status_id',1);
+       
+        $query = $this->db->get()->result();
+        //print_r($query);
+        $count = 0;
+        foreach($query as $query){
+        $waiting_time= $query->waiting_time;
+        sscanf($waiting_time, "%d:%d:%d", $hours, $minutes, $seconds);
+        $time_seconds[$count] = $hours * 3600 + $minutes * 60 + $seconds;   
+            $count++;
+        }
+        $mean_waiting_time=Statistics::mean($time_seconds); 
+        // in seconds
+        $mean_waiting_time = $mean_waiting_time / 60 ;
+        
+        
+        return $waiting_time;
+
+    }
+    public function average_service_time($date,$queue){
+
+        $this->db->select('TIMEDIFF(service_completion_time,service_start_time) as service_time');
+        $this->db->from('customers');
+        $this->db->where('customers.date', $date);
+        //$this->db->where($queue.'.index_ID',);
+        $average_service_time = $this->db->get()->result();
+        //$service_time=$query->service_time;
+        return $average_service_time;
+
+
+
+
+    }
     public function queueLengths($start,$end,$queue)
     {
         $start_date = new DateTime($start);
@@ -164,6 +216,30 @@ class Insights_model extends CI_Model
         }
         return $qlengths;
     }
+    public function average_today_servicetime($date){
+         //1. getting the service start time of the last person
+         $this->db->select('TIMEDIFF (service_completion_time,service_start_time) as service_time');
+         $this->db->from('customers');
+         $this->db->where('customers.date', $date);
+         $this->db->where('status_id',1);
+        
+         $query = $this->db->get()->result();
+         //print_r($query);
+         $count = 0;
+         foreach($query as $query){
+         $today_service_time= $query->service_time;
+         sscanf($today_service_time, "%d:%d:%d", $hours, $minutes, $seconds);
+         $time_seconds[$count] = $hours * 3600 + $minutes * 60 + $seconds;   
+             $count++;
+         }
+         $mean_service_time=Statistics::mean($time_seconds); 
+         // in seconds
+         $mean_service_time = $mean_service_time / 60 ;
+         
+         
+         return $mean_service_time;
+
+    }
 
     public function service_time($date)
     {
@@ -178,12 +254,12 @@ class Insights_model extends CI_Model
 
     }
 
-    public function getWaitingTimes()
+    public function getWaitingTimes()// done
     {
         $this->db->select('TIMEDIFF (service_start_time,arrival_time) as waiting_time');
         $this->db->from($queue);
         $this->db->JOIN('customers', $queue . '.ticket_no= customers.ticket_no');
-        $this->db->where('customers.date', 2019 - 07 - 23);
+        $this->db->where('customers.date', $date);
         $this->db->order_by($queue . '.index_ID= 29', 'ASC');
         $query = $this->db->get()->row();
         $waiting_time = $query->service_time;

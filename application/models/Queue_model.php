@@ -23,7 +23,21 @@ class Queue_model extends CI_Model
         $this->db->from($queue);
         $this->db->join('customers', 'customers.ticket_no = '.$queue.'.ticket_no');
         $this->db->where('customers.date',$date);
+        $this->db->where("customers.status_id = 2 OR customers.status_id = 3");
+
         $this->db->limit(2);
+
+        $customers = $this->db->get()->result();
+        return $customers ;
+    }
+    public function getItems($queue){
+        $date = date('Y-m-d');
+        $this->db->select($queue.'.ticket_no,customers.status_id');
+        $this->db->from($queue);
+        $this->db->join('customers', 'customers.ticket_no = '.$queue.'.ticket_no');
+        $this->db->where('customers.date',$date);
+        $this->db->where("customers.status_id = 2 OR customers.status_id = 3");
+        $this->db->limit(5);
 
         $customers = $this->db->get()->result();
         return $customers ;

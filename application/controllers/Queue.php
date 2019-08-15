@@ -42,8 +42,9 @@ Public function index_get(){
     $this->response($response, REST_Controller::HTTP_OK);
 
 }
-Public function nextInQueue_get(){
-
+Public function Queue_get(){
+    $post_data = file_get_contents("php://input");
+    $decoded_post_data = json_decode($post_data);
 }
 public function LIFO(){
 

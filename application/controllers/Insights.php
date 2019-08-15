@@ -95,7 +95,7 @@ class Insights extends REST_Controller
         $i =0;
         foreach ($customers as $customer){
             $custs[$i]['queue_length']= $customer;
-            $custs[$i]['date']= $start_date;
+            $custs[$i]['date']= $cust_date;
                  //increment date
             $instance_date = date('Y-m-d', strtotime("+1 day", strtotime($cust_date)));
             $cust_date = $instance_date;
@@ -129,17 +129,21 @@ class Insights extends REST_Controller
             }
             if (count($time) != 0) {
                 $mean_service_time = Statistics::mean($time); // in seconds
-                $mean_service_times[$start_date] = round(($mean_service_time / 60),2); // in minutes
+               // $mean_service_times[$start_date] = round(($mean_service_time / 60),2); // in minutes
+                $mean_service_times[$j]['date']= $start_date;
+                $mean_service_times[$j]['service_times'] = round(($mean_service_time / 60),2);
             }else{
-                $mean_service_times[$start_date] =0;
+                $mean_service_times[$j]['service_times'] =0;
+                $mean_service_times[$j]['date']= $start_date;
+
             }
-            if($mean_service_times[$start_date] == 0){
+            if($mean_service_times[$j]['service_times'] == 0){
                 $server_utilization=0;
                 $server_utilizations[$j]['utilizations'] = $server_utilization;
                 $server_utilizations[$j]['date']= $start_date;
 
             }else {
-                $service_rate = 1 / $mean_service_times[$start_date];//miu
+                $service_rate = 1 / $mean_service_times[$j]['service_times'];//miu
 
                 $server_utilization = round(($arrivalRate / $service_rate)*100,2); //formula
                 $server_utilizations[$j]['utilizations'] = $server_utilization;
@@ -173,15 +177,27 @@ class Insights extends REST_Controller
      * @param $start_date
      * @param $end_date
      * @return mixed
+     * @throws
      */
     public function queueLengthSingle($start_date, $end_date)
     {     $q_lengths= array();
         $i =0;
+        date_default_timezone_set('Africa/Nairobi');
+        $start_date = new DateTime($start_date);
+        $end_date = new DateTime($end_date);
         $queues = $this->insights_model->queues();
-      
-        foreach ($queues as $queue) {
-           $q_length[$queue->service_Name] = $this->insights_model->queuelengths($start_date,$end_date,$queue->service_Name);
+        $date =$start_date->format('Y-m-d');
 
+
+        $no_of_days = $end_date->diff($start_date);
+        $day_diff = $no_of_days->format('%d');
+        for ($i = 0; $i <= $day_diff; $i++) {
+           $q_length[$date] = $this->insights_model->queuelengths($date,$queues);
+            //increment date
+            $instance_date = date('Y-m-d', strtotime("+1 day", strtotime($date)));
+            //print_r($instance_date);
+            // echo '</br>';
+            $date = $instance_date;
          
         }
         return$q_length;

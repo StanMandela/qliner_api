@@ -33,8 +33,22 @@ class Insights extends REST_Controller
         
         $email = $decoded_post_data->email;
         $password = $decoded_post_data->password;
-        
-      
+
+        $status =$this->insights_model->authentications($email,$password);
+        if ($status == true){
+            $response = array(
+                'status' => $status,
+
+            );
+        }elseif ($status == false){
+            $response = array(
+                'status' => $status,
+
+            );
+        }
+        $this->response($response, REST_Controller::HTTP_OK);
+
+
     }
 
     /**

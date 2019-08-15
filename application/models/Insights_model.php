@@ -10,6 +10,20 @@ class Insights_model extends CI_Model
         $this->load->database();
 
     }
+    public function authentications($email,$password){
+        $this->db->select('email,password');
+        $this->db->from('manager');
+        $this->db->where('email',$email);
+        $this->db->where('password',$password);
+        $no = $this->db->get()->num_rows();
+
+        if(empty($no)){
+            return "false";
+        }elseif (!empty($no)){
+            return "true";
+        }
+
+    }
 
     public function getCustomersIds($date)
     {

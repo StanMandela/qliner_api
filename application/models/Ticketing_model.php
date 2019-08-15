@@ -186,7 +186,7 @@ class Ticketing_model extends CI_Model
         $this->db->order_by($queue.'.index_ID= 29', 'ASC');
        $query = $this->db->get()->row();
        $waiting_time=$query->service_time;
-       print_r ($waiting_time);
+      // print_r ($waiting_time);
 
 
     }

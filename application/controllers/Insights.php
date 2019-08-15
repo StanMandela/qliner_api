@@ -73,8 +73,11 @@ class Insights extends REST_Controller
             'server_utilization' => $server_utilization,
             'customers' => $this->customers,
             'service_times' =>$this->mean_service_times,
-            'queue_lengths' =>$this->queueLengthSingle($start_date,$end_date)
-
+            'queue_lengths' =>$this->queueLengthSingle($start_date,$end_date),
+            'average_queue_length'=>$this->todayqueueLength(),
+            'average_waiting_time'=>$this->average_waiting_time(),
+            'average_service_time'=>$this->service_time_daily(),
+            
         );
 
         //send data to front end
@@ -195,10 +198,12 @@ class Insights extends REST_Controller
      */
     public function queueLengthSingle($start_date, $end_date)
     {     $q_lengths= array();
+
         $i =0;
         date_default_timezone_set('Africa/Nairobi');
         $start_date = new DateTime($start_date);
         $end_date = new DateTime($end_date);
+
         $queues = $this->insights_model->queues();
         $date =$start_date->format('Y-m-d');
 
@@ -216,11 +221,28 @@ class Insights extends REST_Controller
         }
         return$q_length;
     }
+    public function todayqueueLength(){
+        $date= date('Y-m-d');
 
-    public function arrivalRates()
+        $today_queue= $this->insights_model->today_queue($date);
+        return $today_queue;
+
+    }
+    public function average_waiting_time(){
+         $date= date('Y-m-d');
+
+         $waiting_time=$this->insights_model->waiting_time($date);
+         return $waiting_time;
+    }
+
+    public function service_time_daily()
     {
         //algorithms
+        $date= date('Y-m-d');
 
+        $service_time=$this->insights_model->average_today_servicetime($date);
+         return $service_time;
+    
     }
 
     public function avgWaitingTime($start_date,$end_date)

@@ -74,7 +74,7 @@ class Insights extends REST_Controller
             'customers' => $this->customers,
             'service_times' =>$this->mean_service_times,
             'queue_lengths' =>$this->queueLengthSingle($start_date,$end_date),
-            'average_queue_length'=>$this->todayqueueLength(),
+           'average_queue_length'=>$this->todayqueueLength(),
             'average_waiting_time'=>$this->average_waiting_time(),
             'average_service_time'=>$this->service_time_daily(),
             
@@ -196,28 +196,12 @@ class Insights extends REST_Controller
      * @return mixed
      * @throws
      */
+
     public function queueLengthSingle($start_date, $end_date)
-    {     $q_lengths= array();
-
-        $i =0;
-        date_default_timezone_set('Africa/Nairobi');
-        $start_date = new DateTime($start_date);
-        $end_date = new DateTime($end_date);
-
+    {
         $queues = $this->insights_model->queues();
-        $date =$start_date->format('Y-m-d');
-
-
-        $no_of_days = $end_date->diff($start_date);
-        $day_diff = $no_of_days->format('%d');
-        for ($i = 0; $i <= $day_diff; $i++) {
-           $q_length[$date] = $this->insights_model->queuelengths($date,$queues);
-            //increment date
-            $instance_date = date('Y-m-d', strtotime("+1 day", strtotime($date)));
-            //print_r($instance_date);
-            // echo '</br>';
-            $date = $instance_date;
-         
+        foreach ($queues as $queue) {
+            $q_length[$queue->service_Name] = $this->insights_model->queuelengths($start_date,$end_date,$queue->service_Name);
         }
         return$q_length;
     }

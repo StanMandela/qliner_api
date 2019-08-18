@@ -173,7 +173,9 @@ class Insights_model extends CI_Model
 
         $query = $this->db->get()->result();
         //print_r($query);
+
         $count = 0;
+        $time_seconds = array();
         foreach($query as $query){
             $waiting_time= $query->waiting_time;
             sscanf($waiting_time, "%d:%d:%d", $hours, $minutes, $seconds);
@@ -201,34 +203,31 @@ class Insights_model extends CI_Model
 
 
     }
-
-    public function queueLengths($date,$queues)
-
+    public function queueLengths($start,$end,$queue)
     {
+        $start_date = new DateTime($start);
+        $end_date = new DateTime($end);
+        $no_of_days = $end_date->diff($start_date);
+        $day_diff = $no_of_days->format('%d');
+        $date = $start;
         $qlengths = array();
-        $i =0;
-        foreach($queues as $queue) {
-         //   print_r($queue);
-
-            $this->db->select($queue->service_Name.'.ticket_no');
-            $this->db->from($queue->service_Name);
-            $this->db->join('customers', 'customers.ticket_no =' . $queue->service_Name . '.ticket_no');
+        for ($i = 0; $i <= $day_diff; $i++) {
+            $this->db->select($queue.'.ticket_no');
+            $this->db->from($queue);
+            $this->db->join('customers', 'customers.ticket_no =' . $queue . '.ticket_no');
             $this->db->where('customers.date', $date);
             $qlength = $this->db->get()->num_rows();
-            $qlengths[$i]['service_name'] = $queue->service_Name;
-            $qlengths[$i]['length'] = $qlength;
-
-
-          /*  //increment date
+            $qlengths[$i]["length"] = $qlength;
+            $qlengths[$i]["date"] = $date;
+            //increment date
             $instance_date = date('Y-m-d', strtotime("+1 day", strtotime($date)));
             //print_r($instance_date);
             // echo '</br>';
-            $date = $instance_date;*/
-    $i++;
-
+            $date = $instance_date;
         }
         return $qlengths;
     }
+
     public function average_today_servicetime($date){
          //1. getting the service start time of the last person
          $this->db->select('TIMEDIFF (service_completion_time,service_start_time) as service_time');

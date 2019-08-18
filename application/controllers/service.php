@@ -11,6 +11,7 @@ require 'vendor/oefenweb/statistics/src/Statistics.php';
 
 use Oefenweb\Statistics\Statistics;
 use Restserver\Libraries\REST_Controller;
+
 include("application/controllers/Notification.php");
 
 
@@ -27,7 +28,6 @@ class service extends REST_Controller
         date_default_timezone_set('Africa/Nairobi');
 
 
-
     }
 
     public function serverInstance_post()
@@ -37,26 +37,38 @@ class service extends REST_Controller
         $service_id = $decoded_post_data->service_id;
         $service_name = $this->ticketing_model->get_service_abbr($service_id)->service_Name;
         $customers = $this->queue_model->getItems($service_name);
-        if(!empty($customers)) {
+        if (!empty($customers)) {
             $first_customer = $customers[0];
             $first_customer_details = $this->service_model->getCustomerDetails($first_customer->ticket_no);
             $this->service_model->changeCustomerStatus($first_customer->ticket_no, 3);
 
             //mark service start time
             $time = date("H:i:s");
-            $this->service_model->updateServiceStartTime($first_customer->ticket_no,$time);
+            $this->service_model->updateServiceStartTime($first_customer->ticket_no, $time);
             $mobile = $first_customer_details->mobile_no;
             //compose message
             $message = "Ticket no " . $first_customer->ticket_no . " Your service is starting now at " . $service_name;
             //send notification of service
-            // \notification::sendMessage($mobile,$message);
+            \notification::sendMessage($mobile, $message);
+
+            //check if second customer exists and send text
+            if (array_key_exists(1, $customers)) {
+                $next_customer = $customers[1];
+                $first_customer_details = $this->service_model->getCustomerDetails($next_customer->ticket_no);
+                $mobile = $first_customer_details->mobile_no;
+                //compose message
+                $message = "Ticket no " . $next_customer->ticket_no . " Your will be served next at " . $service_name;
+                //send notification of service
+                \notification::sendMessage($mobile, $message);
+
+            }
 
             $response = array(
 
                 "status" => true,
                 "customers" => $customers
             );
-        }else{
+        } else {
             $response = array(
 
                 "status" => false,
@@ -65,24 +77,23 @@ class service extends REST_Controller
         }
 
 
-
-
-
         $this->response($response, REST_Controller::HTTP_OK);
     }
-    public function nextCustomer_post(){
+
+    public function nextCustomer_post()
+    {
         $post_data = file_get_contents("php://input");
         $decoded_post_data = json_decode($post_data);
         $current = $decoded_post_data->current;
         $next = $decoded_post_data->next;
 
-        $service_id =$decoded_post_data->service_id;
+        $service_id = $decoded_post_data->service_id;
         $service_name = $this->ticketing_model->get_service_abbr($service_id)->service_Name;
         //CLEAR SERVED CUSTOMER
         $currentCustomerDetails = $this->service_model->getCustomerDetails($current);
-        $this->service_model->changeCustomerStatus($current,1);
+        $this->service_model->changeCustomerStatus($current, 1);
         $service_stop = date("H:i:s");
-        $this->service_model->updateServiceStopTime($current,$service_stop);
+        $this->service_model->updateServiceStopTime($current, $service_stop);
 
         //ENGAGE NEXT CUSTOMER
         if (!empty($next) || $next != "none") {// string none is set in front end
@@ -107,14 +118,13 @@ class service extends REST_Controller
                 "status" => true,
                 "customers" => $nextFiveCustomers
             );
-        }else{
+        } else {
             $response = array(
 
                 "status" => false,
                 //"customers" => $nextFiveCustomers
             );
         }
-
 
 
         $this->response($response, REST_Controller::HTTP_OK);

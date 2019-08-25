@@ -216,7 +216,7 @@ class Insights extends REST_Controller
          $date= date('Y-m-d');
 
          $waiting_time=$this->insights_model->waiting_time($date);
-         return $waiting_time;
+         return round($waiting_time,2);
     }
 
     public function service_time_daily()
@@ -225,15 +225,11 @@ class Insights extends REST_Controller
         $date= date('Y-m-d');
 
         $service_time=$this->insights_model->average_today_servicetime($date);
-         return $service_time;
+         return round($service_time,2);
     
     }
 
-    public function avgWaitingTime($start_date,$end_date)
-    {
-        //algorithms
 
-    }
 
 
 }

@@ -80,7 +80,7 @@ class ticketing extends REST_Controller
             if (is_string($aheadInQueue)) {
                 $message = "Your ticket number is " . $ticketNo . " .Service has not started hence not possible to calculate your approx waiting time";
             }elseif ($emergency_code == 1234){
-                $message = "Your ticket number is " . $ticketNo . " Emergency case. Will be served next";
+                $message = "EMERGENCY CASE .Your ticket number is " . $ticketNo . " will be served next";
 
             } else {
                 $waitingTime = $this->calculateExpectedWaitingTime($aheadInQueue, $this->arrival_rate);
@@ -90,9 +90,10 @@ class ticketing extends REST_Controller
                 $message = "Your ticket number is " . $ticketNo . ". Number of people ahead in queue " . $aheadInQueue . ". Approximate waiting time will be " . floor($waitingTime) . " mins. Possible service time will be approximately at " . $approxServiceTime;
                 //send
 
-               //  \Notification::sendMessage($mobile, $message);
             }
-            $response = array(
+        \Notification::sendMessage($mobile, $message);
+
+        $response = array(
 
                 "status" => true,
                  "result" => 'Customer added successfully, Message sent successfully'

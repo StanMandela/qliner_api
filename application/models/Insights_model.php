@@ -33,6 +33,7 @@ class Insights_model extends CI_Model
     {
         $this->db->select('index_ID');
         $this->db->from('customers');
+       // $this->db->where('status_ID', 1);
         $this->db->where('date', $date);
 
         $customers = $this->db->get()->result();
@@ -51,6 +52,25 @@ class Insights_model extends CI_Model
         );
         //print_r($count);
         return $return;
+    }
+    public function getCustomers()
+    {
+        $date = date('Y-m-d');
+        $this->db->select('index_ID');
+        $this->db->from('customers');
+        $this->db->where('date', $date);
+
+        $customers = $this->db->get()->result();
+        $cust = array();
+        $count = 0;
+        foreach ($customers as $customer) {
+            $cust[$count] = $customer->index_ID;
+            $count++;
+        }
+        //  print_r($cust);
+        $no_of_cust = count($cust);
+
+        return $no_of_cust;
     }
 
     public function systemArrivalTimes($start, $end)//done
@@ -194,7 +214,7 @@ class Insights_model extends CI_Model
         $this->db->select('TIMEDIFF(service_completion_time,service_start_time) as service_time');
         $this->db->from('customers');
         $this->db->where('customers.date', $date);
-        //$this->db->where($queue.'.index_ID',);
+        $this->db->where($queue.'.index_ID',1);
         $average_service_time = $this->db->get()->result();
         //$service_time=$query->service_time;
         return $average_service_time;
@@ -258,7 +278,7 @@ class Insights_model extends CI_Model
         $this->db->select('TIMEDIFF(service_completion_time,service_start_time) as service_time');
         $this->db->from('customers');
         $this->db->where('customers.date', $date);
-        //$this->db->where($queue.'.index_ID',);
+        $this->db->where('customers.status_id',1);
         $service_times = $this->db->get()->result();
         //$service_time=$query->service_time;
         return $service_times;
